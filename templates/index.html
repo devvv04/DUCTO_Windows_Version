@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Robot GUI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', monospace;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      margin: 0;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #00d4ff;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 0, 150, 0.1) 0%, transparent 50%),
+        linear-gradient(45deg, transparent 48%, rgba(0, 255, 150, 0.03) 49%, rgba(0, 255, 150, 0.03) 51%, transparent 52%);
+      z-index: -1;
+    }
+
+    .container {
+      background: rgba(10, 15, 25, 0.95);
+      border-radius: 20px;
+      border: 2px solid #00d4ff;
+      display: flex;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      width: 95vw;
+      max-width: 1400px;
+      height: 95vh;
+      box-shadow:
+        0 0 30px rgba(0, 212, 255, 0.5),
+        0 0 60px rgba(0, 212, 255, 0.2),
+        inset 0 0 30px rgba(0, 212, 255, 0.05);
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    /* Camera section */
+    .camera {
+      flex: 5;
+      background: #000;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-right: 2px solid #00d4ff;
+    }
+
+    .camera::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 212, 255, 0.05) 3px,
+        rgba(0, 212, 255, 0.05) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .camera video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(1.1) contrast(1.2) hue-rotate(10deg);
+    }
+
+    .camera::after {
+      content: "NEURAL VISION SYSTEM ACTIVE";
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #00d4ff;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 0 10px #00d4ff;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 8px 16px;
+      border-radius: 15px;
+      border: 1px solid #00d4ff;
+      z-index: 3;
+    }
+
+    /* Indicators panel */
+    .indicators {
+      flex: 1.3;
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.95) 0%, rgba(30, 35, 50, 0.95) 100%);
+      padding: 30px 20px;
+      color: #00d4ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 40px;
+      position: relative;
+    }
+
+    .system-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .system-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ff0096;
+      text-shadow: 0 0 15px #ff0096;
+      margin-bottom: 5px;
+    }
+
+    .system-status {
+      font-size: 12px;
+      color: #00ff96;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* Enable/Disable */
+    .toggle-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .btn-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .toggle-buttons button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    #enable.active {
+      background: linear-gradient(135deg, #00ff96, #00d4ff);
+      border-color: #00ff96;
+      color: #000;
+      box-shadow: 0 0 20px rgba(0, 255, 150, 0.6);
+    }
+
+    #enable.inactive {
+      background: transparent;
+      border-color: #00ff96;
+      color: #00ff96;
+    }
+
+    #disable.active {
+      background: linear-gradient(135deg, #ff0096, #ff4757);
+      border-color: #ff0096;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 0, 150, 0.6);
+    }
+
+    #disable.inactive {
+      background: transparent;
+      border-color: #ff0096;
+      color: #ff0096;
+    }
+
+    /* Brush Speed */
+    .section-header {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      color: #00d4ff;
+      text-align: center;
+      position: relative;
+    }
+
+    #brush-bars {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 120px;
+      gap: 15px;
+      padding: 0 10px;
+    }
+
+    .brush-bar .bar {
+      width: 30px;
+      background: linear-gradient(to top, #333, #555);
+      border-radius: 6px;
+      border: 1px solid #666;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #brush1 .bar { height: 40px; }
+    #brush2 .bar { height: 70px; }
+    #brush3 .bar { height: 100px; }
+
+    .brush-bar.active .bar {
+      border-color: #00d4ff;
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    }
+
+    .brush-bar span {
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .brush-bar.active span {
+      color: #00ff96;
+      text-shadow: 0 0 10px #00ff96;
+    }
+
+    /* Wheel Speed */
+    .wheel-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .wheel-btn {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .wheel-btn.active {
+      background: rgba(0, 212, 255, 0.1);
+      border-color: #00d4ff;
+      color: #00ff96;
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .wheel-btn .box {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #333, #555);
+      border: 1px solid #666;
+      position: relative;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .wheel-btn.active .box {
+      border-color: #00d4ff;
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <!-- Left: Camera -->
+    <div class="camera">
+      <!-- <img src="https://via.placeholder.com/800x600?text=Camera+Feed" alt="Camera Feed"> -->
+       <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
+
+    </div>
+
+    <!-- Right: Indicators -->
+    <div class="indicators">
+      <!-- Enable/Disable -->
+      <div class="toggle-buttons">
+        <div class="btn-wrapper">
+          <button id="enable" onclick="sendCommand('enable')"></button>
+          <span>Enable Indicator</span>
+        </div>
+        <div class="btn-wrapper">
+          <button id="disable" onclick="sendCommand('disable')"></button>
+          <span>Disable Indicator</span>
+        </div>
+      </div>
+
+      <!-- Brush Speed -->
+      <div>
+        <h3>Brush Speed Indicator</h3>
+        <div id="brush-bars">
+          <div id="brush1" class="brush-bar" onclick="sendCommand('brush1')">
+            <div class="bar"></div>
+            <span>Low</span>
+          </div>
+          <div id="brush2" class="brush-bar" onclick="sendCommand('brush2')">
+            <div class="bar"></div>
+            <span>Mid</span>
+          </div>
+          <div id="brush3" class="brush-bar" onclick="sendCommand('brush3')">
+            <div class="bar"></div>
+            <span>High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wheel Speed -->
+      <div>
+        <h3>Wheel Speed Indicator</h3>
+        <div class="wheel-buttons">
+          <div id="wheel1" class="wheel-btn" onclick="sendCommand('wheel1')">
+            <div class="box"></div>
+            <span>Level 1</span>
+          </div>
+          <div id="wheel2" class="wheel-btn" onclick="sendCommand('wheel2')">
+            <div class="box"></div>
+            <span>Level 2</span>
+          </div>
+          <div id="wheel3" class="wheel-btn" onclick="sendCommand('wheel3')">
+            <div class="box"></div>
+            <span>Level 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function resetUI(status) {
+      // Enable/Disable
+      document.getElementById("enable").className = status.enabled ? "active" : "inactive";
+      document.getElementById("disable").className = status.enabled ? "inactive" : "active";
+
+      // Brush
+      for (let i = 1; i <= 3; i++) {
+        const brush = document.getElementById("brush" + i);
+        if (status.brush >= i) {
+          brush.classList.add("active");
+        } else {
+          brush.classList.remove("active");
+        }
+      }
+
+      // Wheel
+      for (let i = 1; i <= 3; i++) {
+        const wheel = document.getElementById("wheel" + i);
+        if (status.wheel === i) {
+          wheel.classList.add("active");
+        } else {
+          wheel.classList.remove("active");
+        }
+      }
+    }
+
+    function sendCommand(cmd) {
+      fetch("/command/" + cmd, { method: "POST" })
+        .then(res => res.json())
+        .then(data => resetUI(data));
+    }
+
+    // Poll status
+    setInterval(() => {
+      fetch("/status")
+        .then(res => res.json())
+        .then(data => resetUI(data));
+    }, 1000);
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "e") sendCommand("enable");
+      if (e.key === "d") sendCommand("disable");
+      if (e.key === "1") sendCommand("brush1");
+      if (e.key === "2") sendCommand("brush2");
+      if (e.key === "3") sendCommand("brush3");
+      if (e.key === "q") sendCommand("wheel1");
+      if (e.key === "w") sendCommand("wheel2");
+      if (e.key === "r") sendCommand("wheel3");
+    });
+  </script>
+</body>
+</html>
